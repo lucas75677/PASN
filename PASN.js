@@ -1,46 +1,52 @@
 async function fetchContent(url) {
   const localCache = await checkLocalCache(url);
-  if (localCache) {
-    return localCache;
-  }
-  
+  if (localCache) return localCache;
+
   const peerData = await findFromPeers(url);
-  if (peerData) {
-    return peerData;
-  }
+  if (peerData) return peerData;
 
   const serverData = await fetchFromServer(url);
-  if (!serverData) {
-    throw new Error("Servidor não encontrado.");
-  }
+  if (!serverData) throw new Error("Servidor não encontrado.");
 
   return serverData;
 }
 
 async function checkLocalCache(url) {
-  // Verifica se o conteúdo está no cache local
   return localStorage.getItem(url);
 }
 
 async function findFromPeers(url) {
-  // Procura dados em outros usuários conectados
   return await webRTCRequest(url);
 }
 
 async function fetchFromServer(url) {
-  // Faz requisição ao servidor original
   try {
-    const response = await fetch(url);
-    if (response.ok) {
-      return await response.text();
-    }
+    const encryptedUrl = encryptData(url); // Encripta o URL
+    const routes = generateRandomRoutes(url); // Roteia pacotes por caminhos diferentes
+
+    const responses = await Promise.all(
+      routes.map(route =>
+        fetch(route, {
+          method: "GET",
+          headers: { 'X-Encrypted': 'true' },
+        })
+      )
+    );
+
+    const validResponse = responses.find(res => res.ok);
+    if (!validResponse) return null;
+
+    const encryptedData = await validResponse.text();
+    return decryptData(encryptedData); // Descriptografa os dados
   } catch (e) {
     return null;
   }
 }
+
+// Streaming em chunks com distribuição dinâmica
 function streamVideo(url) {
-  const chunkSize = 10 * 1024 * 1024; // 10MB por chunk
-  const peers = getPeersConnected(); // Lista de usuários conectados
+  const chunkSize = 512 * 1024; // 512KB por pedaço
+  const peers = getPeersConnected();
 
   fetch(url)
     .then(response => response.body)
@@ -48,12 +54,21 @@ function streamVideo(url) {
       const reader = stream.getReader();
       let chunkIndex = 0;
 
-      function processChunk({ done, value }) {
+      async function processChunk({ done, value }) {
         if (done) return;
-        
+
         const chunk = value.slice(0, chunkSize);
-        distributeToPeers(chunk, peers, chunkIndex);
+        const scrambledChunk = scrambleData(chunk); // Embaralha o chunk
+
+        distributeToPeers(scrambledChunk, peers, chunkIndex); // Distribui aos peers
         chunkIndex++;
+
+        // Monitora invasores
+        if (detectIntrusion(chunk)) {
+          console.warn("Invasor detectado! Reconectando...");
+          return restartConnection(url); // Reinicia a conexão
+        }
+
         reader.read().then(processChunk);
       }
 
@@ -66,6 +81,8 @@ function distributeToPeers(chunk, peers, chunkIndex) {
     sendToPeer(peer, { chunk, index: chunkIndex });
   });
 }
+
+// Funções de segurança
 function maskIP(request) {
   const encryptedData = encryptData(request.body);
   return {
@@ -76,14 +93,43 @@ function maskIP(request) {
 }
 
 function encryptData(data) {
-  // Criptografia básica (melhor usar AES)
+  // AES recomendado, aqui apenas simulação
   return btoa(data);
 }
 
+function decryptData(data) {
+  return atob(data);
+}
+
 function generateRandomIP() {
-  return ${random(1, 255)}.${random(1, 255)}.${random(1, 255)}.${random(1, 255)};
+  return `${random(1, 255)}.${random(1, 255)}.${random(1, 255)}.${random(1, 255)}`;
 }
 
 function random(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
+}
+
+// Embaralhamento e reorganização dos pacotes
+function scrambleData(data) {
+  const scrambled = [...data].sort(() => Math.random() - 0.5);
+  return new Uint8Array(scrambled);
+}
+
+function detectIntrusion(data) {
+  // Simulação de detecção de ataque (pode ser aprimorada)
+  return data.some(byte => byte === 0x00); // Exemplo de byte inválido
+}
+
+function restartConnection(url) {
+  console.log("Reconectando...");
+  return fetchContent(url); // Reinicia o fetch
+}
+
+function generateRandomRoutes(url) {
+  // Cria URLs alternativas (simulando rotas diferentes)
+  const routes = [];
+  for (let i = 0; i < 3; i++) {
+    routes.push(`${url}?route=${generateRandomIP()}`);
+  }
+  return routes;
 }
