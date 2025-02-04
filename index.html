@@ -24,6 +24,78 @@
   </body>
 </html>
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informações do Servidor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    .window {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 300px;
+      height: 200px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+    }
+    .window h3 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Informações do Servidor</h1>
+  <div class="container">
+    <div class="window">
+      <h3>Quantidade de Pisos no Servidor</h3>
+      <p id="floorCount">Carregando...</p>
+    </div>
+    <div class="window">
+      <h3>Mensagens de "Eu vou"</h3>
+      <ul id="messages"></ul>
+    </div>
+    <div class="window">
+      <h3>Informações do Site</h3>
+      <p id="siteInfo">Carregando...</p>
+    </div>
+  </div>
+
+  <script>
+    // Simulação de dados do servidor
+    const serverFloors = 5; // Quantidade de pisos no servidor
+    const messages = [
+      "Eu vou para o piso 1.",
+      "Eu vou para o piso 2.",
+      "Eu vou para o piso 3.",
+      "Eu vou para o piso 4.",
+      "Eu vou para o piso 5."
+    ];
+    const siteInfo = "Este é um site de demonstração que exibe informações do servidor e mensagens.";
+
+    // Atualiza a interface com os dados
+    document.getElementById("floorCount").textContent = `O servidor tem ${serverFloors} pisos.`;
+
+    const messagesList = document.getElementById("messages");
+    messages.forEach(message => {
+      const li = document.createElement("li");
+      li.textContent = message;
+      messagesList.appendChild(li);
+    });
+
+    document.getElementById("https://lucas75677.github.io/PASN/PASN.js").textContent = siteInfo;
+  </script>
+</body>
+</html>
+
 <p><a href="https://lucas75677.github.io/PASN/site.html">site🌎</a> <a href="https://lucas75677.github.io/PASN/Sobre.html">Sobre❕</a></p>
 <p>&nbsp;</p>
 
