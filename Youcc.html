@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed de Vídeos - Invidious</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        #video-feed {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .video-item {
+            width: 300px;
+            margin: 10px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-item img {
+            width: 100%;
+            height: auto;
+        }
+
+        .video-item h3 {
+            font-size: 16px;
+            margin: 10px;
+            text-align: center;
+        }
+
+        #video-player {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-feed"></div>
+
+    <!-- Player de Vídeo -->
+    <div id="video-player" style="display: none;">
+        <h2 id="video-title"></h2>
+        <video id="video-element" controls width="640" height="360"></video>
+    </div>
+
+    <script>
+        // URL da API do Invidious
+        const INVIDIOUS_API_URL = 'https://yewtu.be/api/v1/trending';
+
+        // Função para carregar os vídeos populares
+        async function loadTrendingVideos() {
+            try {
+                const response = await fetch(INVIDIOUS_API_URL);
+                const videos = await response.json();
+
+                const videoFeed = document.getElementById('video-feed');
+                videoFeed.innerHTML = ''; // Limpa o feed antes de adicionar novos vídeos
+
+                videos.forEach(video => {
+                    const videoItem = document.createElement('div');
+                    videoItem.classList.add('video-item');
+
+                    // Cria a estrutura do vídeo
+                    videoItem.innerHTML = `
+                        <img src="${video.thumbnail}" alt="${video.title}">
+                        <h3>${video.title}</h3>
+                    `;
+
+                    // Adiciona o evento de clique para reproduzir o vídeo
+                    videoItem.addEventListener('click', () => playVideo(video));
+
+                    videoFeed.appendChild(videoItem);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar vídeos:', error);
+            }
+        }
+
+        // Função para reproduzir o vídeo
+        function playVideo(video) {
+            const videoPlayer = document.getElementById('video-player');
+            const videoElement = document.getElementById('video-element');
+            const videoTitle = document.getElementById('video-title');
+
+            // Define o título e a fonte do vídeo
+            videoTitle.textContent = video.title;
+            videoElement.src = `https://yewtu.be/latest_version?id=${video.videoId}&itag=22`;
+
+            // Mostra o player de vídeo
+            videoPlayer.style.display = 'block';
+        }
+
+        // Carrega os vídeos quando a página é carregada
+        document.addEventListener('DOMContentLoaded', loadTrendingVideos);
+    </script>
+</body>
+</html>
